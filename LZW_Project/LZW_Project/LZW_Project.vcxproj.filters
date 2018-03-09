@@ -19,4 +19,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\RSA_Algorithms_Project\bigInt435\Makefile">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>
