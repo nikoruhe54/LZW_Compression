@@ -1,0 +1,8 @@
+﻿  main.cpp
+c:\users\nikor_000\lzw_compression\lzw_project\lzw_project\main.cpp(148): warning C4018: '<': signed/unsigned mismatch
+c:\users\nikor_000\lzw_compression\lzw_project\lzw_project\main.cpp(166): error C2131: expression did not evaluate to a constant
+  c:\users\nikor_000\lzw_compression\lzw_project\lzw_project\main.cpp(166): note: failure was caused by a read of a variable outside its lifetime
+  c:\users\nikor_000\lzw_compression\lzw_project\lzw_project\main.cpp(166): note: see usage of 'filestatus'
+c:\users\nikor_000\lzw_compression\lzw_project\lzw_project\main.cpp(168): error C2131: expression did not evaluate to a constant
+  c:\users\nikor_000\lzw_compression\lzw_project\lzw_project\main.cpp(166): note: failure was caused by a read of a variable outside its lifetime
+  c:\users\nikor_000\lzw_compression\lzw_project\lzw_project\main.cpp(166): note: see usage of 'filestatus'
