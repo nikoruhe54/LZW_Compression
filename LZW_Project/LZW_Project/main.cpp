@@ -191,7 +191,7 @@ void binaryIODemo(std::vector<int> compressed) {
 
 int main() {
 	std::vector<int> compressed;
-	compress("AAAAAAABBBBBB", std::back_inserter(compressed));
+	//compress("AAAAAAABBBBBB", std::back_inserter(compressed));
 	copy(compressed.begin(), compressed.end(), std::ostream_iterator<int>(std::cout, ", "));
 	std::cout << std::endl;
 	std::string decompressed = decompress(compressed.begin(), compressed.end());
