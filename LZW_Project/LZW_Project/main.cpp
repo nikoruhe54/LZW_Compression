@@ -136,7 +136,8 @@ void binaryIODemo(std::vector<int> compressed) {
 
 	//writing to file
 	std::cout << "string 2 save : " << bcode << "\n";
-	std::string fileName = "example435.lzw";
+	//std::string fileName = "example435.lzw";
+	std::string fileName = "example.txt";
 	std::ofstream myfile;
 	myfile.open(fileName.c_str(), std::ios::binary);
 
