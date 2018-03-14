@@ -10,6 +10,121 @@
 This code is derived from LZW@RosettaCode for UA CS435
 */
 
+std::string int2BinaryString(int c, int cl);
+int binaryString2Int(std::string p);
+
+std::string readFileBlockIO(std::string filename) {
+	std::ifstream inputFile(filename.c_str(), std::ios::binary);
+	std::streampos begin;
+	std::streampos end;
+
+	begin = inputFile.tellg();
+	inputFile.seekg(0, std::ios::end);
+	end = inputFile.tellg();
+	inputFile.seekg(0, std::ios::beg);
+
+	std::streampos size = end - begin;
+
+	char* memoryBlock = new char[size];
+
+	inputFile.read(memoryBlock, size);
+	memoryBlock[size] = '\0';
+
+	inputFile.close();
+
+	return std::string(memoryBlock, size);
+}
+
+void writeFile(std::vector<int> compressed, std::string filename) {
+
+	int c = 69;
+	int bits = 9;
+	std::string p = int2BinaryString(c, bits);
+	std::cout << "c=" << c << " : binary string=" << p << "; back to code=" << binaryString2Int(p) << "\n";
+
+	std::string bcode = "";
+	for (std::vector<int>::iterator it = compressed.begin(); it != compressed.end(); ++it) {
+		if (*it<256) {
+			bits = 8;
+		}
+		else {
+			bits = 9;
+		}
+		bits = 12;
+		p = int2BinaryString(*it, bits);
+		std::cout << "c=" << *it << " : binary string=" << p << "; back to code=" << binaryString2Int(p) << "\n";
+		bcode += p;
+	}
+
+	std::ofstream outputFile(filename.c_str(), std::ios::binary);
+
+	std::string zeros = "00000000";
+	if (bcode.size() % 8 != 0) {  //make sure the length of the binary string is a multiple of 8
+		bcode += zeros.substr(0, 8 - bcode.size() % 8);
+	}
+
+	int b;
+	for (int i = 0; i < bcode.size(); i += 8) {
+		b = 1;
+		for (int j = 0; j < 8; j++) {
+			b = b << 1;
+			if (bcode.at(i + j) == '1') {
+				b += 1;
+			}
+		}
+		char c = (char)(b & 255); //save the string byte by byte
+		outputFile.write(&c, 1);
+	}
+	outputFile.close();
+}
+
+std::vector<int> readBinaryFile(std::string filename) {
+	std::ifstream myfile2(filename.c_str(), std::ios::binary);
+
+	std::string zeros = "00000000";
+
+	struct stat filestatus;
+	stat(filename.c_str(), &filestatus);
+	long fsize = filestatus.st_size; //get the size of the file in bytes
+
+	char c2[fsize];
+	myfile2.read(c2, fsize);
+
+	std::string s = "";
+	long count = 0;
+	while (count < fsize) {
+		unsigned char uc = (unsigned char)c2[count];
+		std::string p = ""; //a binary string
+		for (int j = 0; j<8 && uc>0; j++) {
+			if (uc % 2 == 0)
+				p = "0" + p;
+			else
+				p = "1" + p;
+			uc = uc >> 1;
+		}
+		p = zeros.substr(0, 8 - p.size()) + p; //pad 0s to left if needed
+											   // result.push_back(binaryString2Int(p)); 
+		s += p;
+		count++;
+	}
+	myfile2.close();
+
+	int bits = 12;
+
+	if (s.size() % bits != 0) {
+		s = std::string(s.data(), (s.size() / bits) * bits);
+	}
+
+	std::vector<int> result;
+
+	for (int i = 0; i < s.length(); i += bits) {
+		result.push_back(binaryString2Int(s.substr(i, bits)));
+	}
+
+	return result;
+}
+
+
 // Compress a string to a list of output symbols.
 // The result will be written to the output iterator
 // starting at "result"; the final iterator is returned.
