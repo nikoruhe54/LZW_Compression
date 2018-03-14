@@ -13,6 +13,31 @@ This code is derived from LZW@RosettaCode for UA CS435
 std::string int2BinaryString(int c, int cl);
 int binaryString2Int(std::string p);
 
+int BuildBinaryCode(std::string binaryCode, std::string filename) {
+	std::ofstream outFile(filename.c_str(), std::ios::binary);
+	std::string zeros = "00000000";
+	int bytes = 1;
+
+	//make the length of the binary divisible by 8
+	if (binaryCode.size() % 8 != 0) {
+		binaryCode += zeros.substr(0, 8 - (binaryCode.size() % 8));
+	}
+
+	//build the binary code
+	for (int i = 0; i < binaryCode.size(); i += 8) {
+		for (int j = 0; j < 8; j++) {
+			bytes = bytes << 1;
+			if (binaryCode.at(i + j) == '1') {
+				bytes += 1;
+			}
+		}
+		//the string should be saved in each byte
+		char c = (char)(bytes & 255);
+		outFile.write(&c, 1);
+	}
+	outFile.close();
+}
+
 void write(std::vector<int> compressed, std::string filename) {
 	int c = 69, bits = 12, bytes = 1;
 
