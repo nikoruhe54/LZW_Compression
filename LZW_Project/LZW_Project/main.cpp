@@ -14,45 +14,40 @@ std::string int2BinaryString(int c, int cl);
 int binaryString2Int(std::string p);
 
 void write(std::vector<int> compressed, std::string filename) {
-	int c = 69;
-	int bits = 9;
-	std::string p = int2BinaryString(c, bits);
-	std::cout << "c=" << c << " : binary string=" << p << "; back to code=" << binaryString2Int(p) << "\n";
+	int c = 69, bits = 12;
 
-	std::string bcode = "";
+	std::string tempStr = int2BinaryString(c, bits);
+	std::cout << "c=" << c << " : binary string=" << tempStr << "; back to code=" << binaryString2Int(tempStr) << "\n";
+
+	std::string binaryCode = "";
 	for (std::vector<int>::iterator it = compressed.begin(); it != compressed.end(); ++it) {
-		if (*it<256) {
-			//bits = 8;
-		}
-		else {
-			//bits = 9;
-		}
-		bits = 12;
-		p = int2BinaryString(*it, bits);
-		std::cout << "c=" << *it << " : binary string=" << p << "; back to code=" << binaryString2Int(p) << "\n";
-		bcode += p;
+		tempStr = int2BinaryString(*it, bits);
+		std::cout << "c=" << *it << " : binary string=" << tempStr << "; back to code=" << binaryString2Int(tempStr) << "\n";
+		binaryCode += tempStr;
 	}
 
-	std::ofstream outputFile(filename.c_str(), std::ios::binary);
-
+	std::ofstream outFile(filename.c_str(), std::ios::binary);
 	std::string zeros = "00000000";
-	if (bcode.size() % 8 != 0) {  //make sure the length of the binary string is a multiple of 8
-		bcode += zeros.substr(0, 8 - bcode.size() % 8);
+
+	//make the length of the binary divisible by 8
+	if (binaryCode.size() % 8 != 0) {
+		binaryCode += zeros.substr(0, 8 - binaryCode.size() % 8);
 	}
 
 	int b;
-	for (int i = 0; i < bcode.size(); i += 8) {
+	for (int i = 0; i < binaryCode.size(); i += 8) {
 		b = 1;
 		for (int j = 0; j < 8; j++) {
 			b = b << 1;
-			if (bcode.at(i + j) == '1') {
+			if (binaryCode.at(i + j) == '1') {
 				b += 1;
 			}
 		}
-		char c = (char)(b & 255); //save the string byte by byte
-		outputFile.write(&c, 1);
+		//the string should be saved in each byte
+		char c = (char)(b & 255);
+		outFile.write(&c, 1);
 	}
-	outputFile.close();
+	outFile.close();
 }
 
 std::vector<int> readBinaryFile(std::string filename) {
@@ -232,7 +227,7 @@ void binaryIODemo(std::vector<int> compressed) {
 	std::string p = int2BinaryString(c, bits);
 	std::cout << "c=" << c << " : binary string=" << p << "; back to code=" << binaryString2Int(p) << "\n";
 
-	std::string bcode = "";
+	std::string binaryCode = "";
 	for (std::vector<int>::iterator it = compressed.begin(); it != compressed.end(); ++it) {
 		if (*it<256)
 			bits = 8;
@@ -242,26 +237,26 @@ void binaryIODemo(std::vector<int> compressed) {
 		bits = 12;
 		p = int2BinaryString(*it, bits);
 		std::cout << "c=" << *it << " : binary string=" << p << "; back to code=" << binaryString2Int(p) << "\n";
-		bcode += p;
+		binaryCode += p;
 	}
 
 	//writing to file
-	std::cout << "string 2 save : " << bcode << "\n";
+	std::cout << "string 2 save : " << binaryCode << "\n";
 	//std::string fileName = "example435.lzw";
 	std::string fileName = "example.txt";
 	std::ofstream myfile;
 	myfile.open(fileName.c_str(), std::ios::binary);
 
 	std::string zeros = "00000000";
-	if (bcode.size() % 8 != 0) //make sure the length of the binary string is a multiple of 8
-		bcode += zeros.substr(0, 8 - bcode.size() % 8);
+	if (binaryCode.size() % 8 != 0) //make sure the length of the binary string is a multiple of 8
+		binaryCode += zeros.substr(0, 8 - binaryCode.size() % 8);
 
 	int b;
-	for (int i = 0; i < bcode.size(); i += 8) {
+	for (int i = 0; i < binaryCode.size(); i += 8) {
 		b = 1;
 		for (int j = 0; j < 8; j++) {
 			b = b << 1;
-			if (bcode.at(i + j) == '1')
+			if (binaryCode.at(i + j) == '1')
 				b += 1;
 		}
 		char c = (char)(b & 255); //save the string byte by byte
@@ -348,7 +343,7 @@ int main(int argc, char* argv[]) {
 			filename += 2;
 		}
 
-		std::ofstream outputFile(filename, std::ios::binary);
-		outputFile.write(document.data(), document.size());
+		std::ofstream outFile(filename, std::ios::binary);
+		outFile.write(document.data(), document.size());
 	}
 }
