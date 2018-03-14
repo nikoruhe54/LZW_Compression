@@ -13,30 +13,7 @@ This code is derived from LZW@RosettaCode for UA CS435
 std::string int2BinaryString(int c, int cl);
 int binaryString2Int(std::string p);
 
-std::string readFileBlockIO(std::string filename) {
-	std::ifstream inputFile(filename.c_str(), std::ios::binary);
-	std::streampos begin;
-	std::streampos end;
-
-	begin = inputFile.tellg();
-	inputFile.seekg(0, std::ios::end);
-	end = inputFile.tellg();
-	inputFile.seekg(0, std::ios::beg);
-
-	std::streampos size = end - begin;
-
-	char* memoryBlock = new char[size];
-
-	inputFile.read(memoryBlock, size);
-	memoryBlock[size] = '\0';
-
-	inputFile.close();
-
-	return std::string(memoryBlock, size);
-}
-
-void writeFile(std::vector<int> compressed, std::string filename) {
-
+void write(std::vector<int> compressed, std::string filename) {
 	int c = 69;
 	int bits = 9;
 	std::string p = int2BinaryString(c, bits);
@@ -45,10 +22,10 @@ void writeFile(std::vector<int> compressed, std::string filename) {
 	std::string bcode = "";
 	for (std::vector<int>::iterator it = compressed.begin(); it != compressed.end(); ++it) {
 		if (*it<256) {
-			bits = 8;
+			//bits = 8;
 		}
 		else {
-			bits = 9;
+			//bits = 9;
 		}
 		bits = 12;
 		p = int2BinaryString(*it, bits);
@@ -229,6 +206,25 @@ int binaryString2Int(std::string p) {
 	}
 	return code;
 }
+
+std::string readFileIO(std::string filename) {
+	std::ifstream infile(filename.c_str(), std::ios::binary);
+	std::streampos begin;
+	std::streampos end;
+	begin = infile.tellg();
+	infile.seekg(0, std::ios::end);
+	end = infile.tellg();
+	infile.seekg(0, std::ios::beg);
+	std::streampos size = end - begin;
+
+	char* mem_Block = new char[size];
+	infile.read(mem_Block, size);
+	mem_Block[size] = '\0';
+	infile.close();
+
+	return std::string(mem_Block, size);
+}
+
 /*
 void binaryIODemo(std::vector<int> compressed) {
 	int c = 69;
@@ -320,18 +316,18 @@ int main() {
 */
 
 int main(int argc, char* argv[]) {
-	std::ifstream inputfile;
+	std::ifstream infile;
 	std::string filename(argv[2]);
 
 	if (*argv[1] == 'c') {
 		// Compress
-		std::string document = readFileBlockIO(filename);
+		std::string document = readFileIO(filename);
 		std::vector<int> compressedDocument;
 		compress(document, std::back_inserter(compressedDocument));
 
 		filename += ".lzw";
 
-		writeFile(compressedDocument, filename);
+		write(compressedDocument, filename);
 	}
 
 	if (*argv[1] == 'e') {
