@@ -13,7 +13,7 @@ This code is derived from LZW@RosettaCode for UA CS435
 std::string int2BinaryString(int c, int cl);
 int binaryString2Int(std::string p);
 
-int BuildBinaryCode(std::string binaryCode, std::string filename) {
+int CreateBinaryCode(std::string binaryCode, std::string filename) {
 	std::ofstream outFile(filename.c_str(), std::ios::binary);
 	std::string zeros = "00000000";
 	int bytes = 1;
@@ -51,7 +51,7 @@ void write(std::vector<int> compressed, std::string filename) {
 		binaryCode += tempStr;
 	}
 
-	BuildBinaryCode(binaryCode, filename);
+	CreateBinaryCode(binaryCode, filename);
 
 	/*
 	std::ofstream outFile(filename.c_str(), std::ios::binary);
