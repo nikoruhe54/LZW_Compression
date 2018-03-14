@@ -229,7 +229,7 @@ int binaryString2Int(std::string p) {
 	}
 	return code;
 }
-
+/*
 void binaryIODemo(std::vector<int> compressed) {
 	int c = 69;
 	int bits = 9;
@@ -303,7 +303,8 @@ void binaryIODemo(std::vector<int> compressed) {
 	myfile2.close();
 	std::cout << " saved string : " << s << "\n";
 }
-
+*/
+/*
 int main() {
 	std::vector<int> compressed;
 	compress("AAAAAAABBBBBB", std::back_inserter(compressed));
@@ -315,4 +316,42 @@ int main() {
 	binaryIODemo(compressed);
 
 	return 0;
+}
+*/
+
+int main(int argc, char* argv[]) {
+	std::ifstream inputfile;
+	std::string filename(argv[2]);
+
+	if (*argv[1] == 'c') {
+		// Compress
+		std::string document = readFileBlockIO(filename);
+		std::vector<int> compressedDocument;
+		compress(document, std::back_inserter(compressedDocument));
+
+		filename += ".lzw";
+
+		writeFile(compressedDocument, filename);
+	}
+
+	if (*argv[1] == 'e') {
+		// Expand
+		std::vector<int> compressedDocument = readBinaryFile(filename);
+		std::cout << "print\n";
+		std::string document = decompress(compressedDocument.begin(), compressedDocument.end());
+		std::cout << "print2\n";
+
+
+		filename = filename.substr(0, filename.find_last_of("."));
+		auto extension = filename.find_first_of(".");
+		if (extension != std::string::npos) {
+			filename.insert(filename.find_first_of("."), "2");
+		}
+		else {
+			filename += 2;
+		}
+
+		std::ofstream outputFile(filename, std::ios::binary);
+		outputFile.write(document.data(), document.size());
+	}
 }
