@@ -15,8 +15,6 @@ Source code is derived and modified from LZW@RosettaCode for UA CS435
 #include <sys/stat.h>
 using namespace std;
 
-//This function was provided and converts an int to a binary string with
-//a certain amount of bits for the size of the string
 std::string int2BinaryString(int c, int cl) {
 	std::string p = ""; //a binary code string with code length = cl
 	int code = c;
@@ -39,7 +37,6 @@ std::string int2BinaryString(int c, int cl) {
 	return p;
 }
 
-//This will take a binary string and convert it to an int
 int binaryString2Int(string p) {
 	int code = 0;
 	if (p.size()>0) {
@@ -56,54 +53,72 @@ int binaryString2Int(string p) {
 	return code;
 }
 
-// This function was provided to compress the contents of the file using LZW
+void getNumberofBits(int &bits, int dictionarySize) {
+	bits = ceil(log2(dictionarySize + 1));
+	if (bits > 16) {
+		bits = 16;
+	}
+}
+
+void getBinaryCode(string &binaryCode, map<string, int>dictionary, int dictionarySize, string w) {
+	if (!w.empty()) {
+		binaryCode += int2BinaryString(dictionary[w], min((int)ceil(log2(dictionarySize + 1)), 16));
+	}
+}
+
+void populateDictionary(map<string, int> &dictionary, int &dictionarySize, string &word, string wc, char c) {
+	string word;
+	if (dictionarySize < 65536)
+		dictionary[wc] = dictionarySize++;
+	word = string(1, c);
+}
+
+// Compress a string to a list of output symbols.
+// The result will be written to the output iterator
+// starting at "result"; the final iterator is returned.
 void compress(const string &uncompressed, string fileName) {
-	//create the binary string to save the compressed file to
-	string bcode = "";
-	int dictSize = 256;
+	// Build the dictionary
+	string binaryCode = "";
+	int tableSize = 256, bits;
 	map<string, int> dictionary;
 	for (int i = 0; i < 256; i++)
 		dictionary[string(1, i)] = i;
 
 	string w;
-	for (string::const_iterator it = uncompressed.begin(); it != uncompressed.end(); ++it) {
+	for (string::const_iterator it = uncompressed.begin(); 
+		it != uncompressed.end(); ++it) {
 		char c = *it;
 		string wc = w + c;
 		if (dictionary.count(wc))
 			w = wc;
 		else {
-			//save the numbers to the correct bit length, between 9 and 16
-			int bits = ceil(log2(dictSize + 1));
-			if (bits > 16)
-				bits = 16;
-			bcode += int2BinaryString(dictionary[w], bits);
-			// Add wc to the dictionary if there is still room in the table of 16 bits
-			if (dictSize < 65536)
-				dictionary[wc] = dictSize++;
-			w = string(1, c);
+			//ensure that there are between 9 and 16 bits
+			getNumberofBits(bits, tableSize);
+			binaryCode += int2BinaryString(dictionary[w], bits);
+
+			//if space is available, add wc to dictionary
+			populateDictionary(dictionary, tableSize, w, wc, c);
 		}
 	}
-	// Output the code for w.
-	if (!w.empty()) {
-		bcode += int2BinaryString(dictionary[w], min((int)ceil(log2(dictSize + 1)), 16));
-	}
+
+	getBinaryCode(binaryCode, dictionary, tableSize, w);
 	//make the compressed file saved with extension .lzw2
-	fileName += ".lzw2";
+	fileName += ".lzwM";
 	ofstream myfile;
 	myfile.open(fileName.c_str(), ios::binary);
 
 	string zeros = "00000000";
 	//make sure the length of the binary string is a multiple of 8
-	if (bcode.size() % 8 != 0)
-		bcode += zeros.substr(0, 8 - bcode.size() % 8);
+	if (binaryCode.size() % 8 != 0)
+		binaryCode += zeros.substr(0, 8 - binaryCode.size() % 8);
 
 	//convert the binary string to characters for simple compression
 	int b;
-	for (int i = 0; i < bcode.size(); i += 8) {
+	for (int i = 0; i < binaryCode.size(); i += 8) {
 		b = 1;
 		for (int j = 0; j < 8; j++) {
 			b = b << 1;
-			if (bcode.at(i + j) == '1')
+			if (binaryCode.at(i + j) == '1')
 				b += 1;
 		}
 		//save the string byte by byte
@@ -116,7 +131,7 @@ void compress(const string &uncompressed, string fileName) {
 // This function was provided to decompress a compressed file back to original using LZW
 template <typename Iterator>
 string decompress(Iterator begin, Iterator end) {
-	int dictSize = 256;
+	int tableSize = 256;
 	//Reverse the disctionary created by reversing the map
 	map<int, string> dictionary;
 	for (int i = 0; i < 256; i++)
@@ -129,14 +144,14 @@ string decompress(Iterator begin, Iterator end) {
 		int k = *begin;
 		if (dictionary.count(k))
 			entry = dictionary[k];
-		else if (k == dictSize)
+		else if (k == tableSize)
 			entry = w + w[0];
 		else throw "Bad compressed k";
 
 		result += entry;
 
 		// Add w+entry[0] to the dictionary.
-		dictionary[dictSize++] = w + entry[0];
+		dictionary[tableSize++] = w + entry[0];
 
 		w = entry;
 	}
