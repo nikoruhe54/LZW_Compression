@@ -43,7 +43,7 @@ int CreateBinaryCode(std::string binaryCode, std::string filename) {
 }
 
 void write(std::vector<int> compressed, std::string filename) {
-	int c = 65, bits = 12, bytes = 1;
+	int c = 69, bits = 12, bytes = 1;
 
 	std::string tempStr = int2BinaryString(c, bits);
 	std::cout << "Writing File.... may take a few seconds for large files \n";
