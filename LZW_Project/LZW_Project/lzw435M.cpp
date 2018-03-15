@@ -67,7 +67,6 @@ void getBinaryCode(string &binaryCode, map<string, int>dictionary, int dictionar
 }
 
 void populateDictionary(map<string, int> &dictionary, int &dictionarySize, string &word, string wc, char c) {
-	string word;
 	if (dictionarySize < 65536)
 		dictionary[wc] = dictionarySize++;
 	word = string(1, c);
