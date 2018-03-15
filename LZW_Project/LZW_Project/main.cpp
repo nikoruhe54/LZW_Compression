@@ -229,10 +229,10 @@ int main(int argc, char* argv[]) {
 
 	std::string filename(argv[2]);
 	std::ifstream infile;
-	std::vector<int> compressDoc;
 
 	//compress the file
 	if (*argv[1] == 'c') {
+		std::vector<int> compressDoc;
 		std::string doc = readFileIO(filename);
 		compress(doc, std::back_inserter(compressDoc));
 		filename += ".lzw";
@@ -241,7 +241,7 @@ int main(int argc, char* argv[]) {
 
 	//decompress the file
 	if (*argv[1] == 'e') {
-		compressDoc = BinaryFileInput(filename);
+		std::vector<int> compressDoc = BinaryFileInput(filename);
 		std::string document = decompress(compressDoc.begin(), compressDoc.end());
 
 		filename = filename.substr(0, filename.find_last_of("."));
