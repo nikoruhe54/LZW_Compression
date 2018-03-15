@@ -54,49 +54,50 @@ void write(std::vector<int> compressed, std::string filename) {
 	CreateBinaryCode(binaryCode, filename);
 }
 
-std::vector<int> readBinaryFile(std::string filename) {
-	std::ifstream myfile2(filename.c_str(), std::ios::binary);
+void buildBinaryString(char c2[], long fileSize, std::string zeros, std::string &str) {
+	long iterator = 0;
 
-	std::string zeros = "00000000";
-
-	struct stat filestatus;
-	stat(filename.c_str(), &filestatus);
-	long fsize = filestatus.st_size; //get the size of the file in bytes
-
-	char c2[fsize];
-	myfile2.read(c2, fsize);
-
-	std::string s = "";
-	long count = 0;
-	while (count < fsize) {
-		unsigned char uc = (unsigned char)c2[count];
-		std::string p = ""; //a binary string
-		for (int j = 0; j<8 && uc>0; j++) {
-			if (uc % 2 == 0)
-				p = "0" + p;
+	while (iterator < fileSize) {
+		unsigned char temp = (unsigned char)c2[iterator];
+		//open a binary string
+		std::string buildStr = "";
+		for (int j = 0; j < 8 && temp > 0; j++) {
+			if (temp % 2 == 0)
+				buildStr = "0" + buildStr;
 			else
-				p = "1" + p;
-			uc = uc >> 1;
+				buildStr = "1" + buildStr;
+			temp = temp >> 1;
 		}
-		p = zeros.substr(0, 8 - p.size()) + p; //pad 0s to left if needed
-											   // result.push_back(binaryString2Int(p)); 
-		s += p;
-		count++;
+		//if the string is not an exact byte, add extra 0s
+		buildStr = zeros.substr(0, 8 - buildStr.size()) + buildStr;
+		str += buildStr;
+		iterator++;
 	}
-	myfile2.close();
+}
 
+std::vector<int> BinaryFileInput(std::string filename) {
+	std::ifstream myfile2(filename.c_str(), std::ios::binary);
+	struct stat stateOfFile;
+	std::string zeros = "00000000";
+	stat(filename.c_str(), &stateOfFile);
+	std::string str = "";
 	int bits = 12;
-
-	if (s.size() % bits != 0) {
-		s = std::string(s.data(), (s.size() / bits) * bits);
-	}
-
 	std::vector<int> result;
 
-	for (int i = 0; i < s.length(); i += bits) {
-		result.push_back(binaryString2Int(s.substr(i, bits)));
-	}
+	//determine how many bytes the file has
+	long fileSize = stateOfFile.st_size;
+	char c2[fileSize];
+	myfile2.read(c2, fileSize);
 
+	//develope the binary string that will be read from
+	buildBinaryString(c2, fileSize, zeros, str);
+	myfile2.close();
+	if (str.size() % bits != 0) {
+		str = std::string(str.data(), (str.size() / bits) * bits);
+	}
+	for (int i = 0; i < str.length(); i += bits) {
+		result.push_back(binaryString2Int(str.substr(i, bits)));
+	}
 	return result;
 }
 
@@ -117,7 +118,7 @@ Iterator compress(const std::string &uncompressed, Iterator result) {
 		it != uncompressed.end(); ++it) {
 		char c = *it;
 		std::string wc = w + c;
-		if (dictionary.count(wc))
+		if (dictionary.iterator(wc))
 			w = wc;
 		else {
 			*result++ = dictionary[w];
@@ -150,7 +151,7 @@ std::string decompress(Iterator begin, Iterator end) {
 	std::string entry;
 	for (; begin != end; begin++) {
 		int k = *begin;
-		if (dictionary.count(k))
+		if (dictionary.iterator(k))
 			entry = dictionary[k];
 		else if (k == dictSize)
 			entry = w + w[0];
@@ -224,118 +225,24 @@ std::string readFileIO(std::string filename) {
 	return std::string(mem_Block, size);
 }
 
-/*
-void binaryIODemo(std::vector<int> compressed) {
-	int c = 69;
-	int bits = 9;
-	std::string p = int2BinaryString(c, bits);
-	std::cout << "c=" << c << " : binary string=" << p << "; back to code=" << binaryString2Int(p) << "\n";
-
-	std::string binaryCode = "";
-	for (std::vector<int>::iterator it = compressed.begin(); it != compressed.end(); ++it) {
-		if (*it<256)
-			bits = 8;
-		else
-			bits = 9;
-
-		bits = 12;
-		p = int2BinaryString(*it, bits);
-		std::cout << "c=" << *it << " : binary string=" << p << "; back to code=" << binaryString2Int(p) << "\n";
-		binaryCode += p;
-	}
-
-	//writing to file
-	std::cout << "string 2 save : " << binaryCode << "\n";
-	//std::string fileName = "example435.lzw";
-	std::string fileName = "example.txt";
-	std::ofstream myfile;
-	myfile.open(fileName.c_str(), std::ios::binary);
-
-	std::string zeros = "00000000";
-	if (binaryCode.size() % 8 != 0) //make sure the length of the binary string is a multiple of 8
-		binaryCode += zeros.substr(0, 8 - binaryCode.size() % 8);
-
-	int b;
-	for (int i = 0; i < binaryCode.size(); i += 8) {
-		b = 1;
-		for (int j = 0; j < 8; j++) {
-			b = b << 1;
-			if (binaryCode.at(i + j) == '1')
-				b += 1;
-		}
-		char c = (char)(b & 255); //save the string byte by byte
-		myfile.write(&c, 1);
-	}
-	myfile.close();
-
-	//reading from a file
-	std::ifstream myfile2;
-	myfile2.open(fileName.c_str(), std::ios::binary);
-
-	struct stat filestatus;
-	stat(fileName.c_str(), &filestatus);
-	const long fsize = filestatus.st_size; //get the size of the file in bytes
-
-	char c2[fsize];
-	myfile2.read(c2, fsize);
-
-	std::string s = "";
-	long count = 0;
-	while (count<fsize) {
-		unsigned char uc = (unsigned char)c2[count];
-		std::string p = ""; //a binary string
-		for (int j = 0; j<8 && uc>0; j++) {
-			if (uc % 2 == 0)
-				p = "0" + p;
-			else
-				p = "1" + p;
-			uc = uc >> 1;
-		}
-		p = zeros.substr(0, 8 - p.size()) + p; //pad 0s to left if needed
-		s += p;
-		count++;
-	}
-	myfile2.close();
-	std::cout << " saved string : " << s << "\n";
-}
-*/
-/*
-int main() {
-	std::vector<int> compressed;
-	compress("AAAAAAABBBBBB", std::back_inserter(compressed));
-	copy(compressed.begin(), compressed.end(), std::ostream_iterator<int>(std::cout, ", "));
-	std::cout << std::endl;
-	std::string decompressed = decompress(compressed.begin(), compressed.end());
-	std::cout << decompressed << std::endl;
-
-	binaryIODemo(compressed);
-
-	return 0;
-}
-*/
-
 int main(int argc, char* argv[]) {
-	std::ifstream infile;
+
 	std::string filename(argv[2]);
+	std::ifstream infile;
+	std::vector<int> compressDoc;
 
+	//compress the file
 	if (*argv[1] == 'c') {
-		// Compress
-		std::string document = readFileIO(filename);
-		std::vector<int> compressedDocument;
-		compress(document, std::back_inserter(compressedDocument));
-
+		std::string doc = readFileIO(filename);
+		compress(doc, std::back_inserter(compressDoc));
 		filename += ".lzw";
-
-		write(compressedDocument, filename);
+		write(compressDoc, filename);
 	}
 
+	//decompress the file
 	if (*argv[1] == 'e') {
-		// Expand
-		std::vector<int> compressedDocument = readBinaryFile(filename);
-		std::cout << "print\n";
-		std::string document = decompress(compressedDocument.begin(), compressedDocument.end());
-		std::cout << "print2\n";
-
+		compressDoc = BinaryFileInput(filename);
+		std::string document = decompress(compressDoc.begin(), compressDoc.end());
 
 		filename = filename.substr(0, filename.find_last_of("."));
 		auto extension = filename.find_first_of(".");
