@@ -13,13 +13,14 @@ Source code is derived and modified from LZW@RosettaCode for UA CS435
 #include <iterator>
 #include <vector> 
 #include <sys/stat.h>
+using namespace std;
 
-std::string int2BinaryString(int c, int cl);
-int binaryString2Int(std::string p);
+string int2BinaryString(int c, int cl);
+int binaryString2Int(string p);
 
-int CreateBinaryCode(std::string binaryCode, std::string filename) {
-	std::ofstream outFile(filename.c_str(), std::ios::binary);
-	std::string zeros = "00000000";
+int CreateBinaryCode(string binaryCode, string filename) {
+	ofstream outFile(filename.c_str(), std::ios::binary);
+	string zeros = "00000000";
 	int bytes = 1;
 
 	//make the length of the binary divisible by 8
@@ -42,13 +43,13 @@ int CreateBinaryCode(std::string binaryCode, std::string filename) {
 	outFile.close();
 }
 
-void write(std::vector<int> compressed, std::string filename) {
+void write(std::vector<int> compressed, string filename) {
 	int c = 69, bits = 12, bytes = 1;
 
-	std::string tempStr = int2BinaryString(c, bits);
+	string tempStr = int2BinaryString(c, bits);
 	std::cout << "Writing File.... may take a few seconds for large files \n";
 
-	std::string binaryCode = "";
+	string binaryCode = "";
 	for (std::vector<int>::iterator it = compressed.begin(); it != compressed.end(); ++it) {
 		tempStr = int2BinaryString(*it, bits);
 		binaryCode += tempStr;
@@ -56,13 +57,13 @@ void write(std::vector<int> compressed, std::string filename) {
 	CreateBinaryCode(binaryCode, filename);
 }
 
-void buildBinaryString(char c2[], long fileSize, std::string zeros, std::string &str) {
+void buildBinaryString(char c2[], long fileSize, string zeros, string &str) {
 	long iterator = 0;
 
 	while (iterator < fileSize) {
 		unsigned char temp = (unsigned char)c2[iterator];
 		//open a binary string
-		std::string buildStr = "";
+		string buildStr = "";
 		for (int j = 0; j < 8 && temp > 0; j++) {
 			if (temp % 2 == 0)
 				buildStr = "0" + buildStr;
@@ -77,12 +78,12 @@ void buildBinaryString(char c2[], long fileSize, std::string zeros, std::string 
 	}
 }
 
-std::vector<int> BinaryFileInput(std::string filename) {
+std::vector<int> BinaryFileInput(string filename) {
 	std::ifstream myfile2(filename.c_str(), std::ios::binary);
 	struct stat stateOfFile;
-	std::string zeros = "00000000";
+	string zeros = "00000000";
 	stat(filename.c_str(), &stateOfFile);
-	std::string str = "";
+	string str = "";
 	int bits = 12;
 	std::vector<int> result;
 
@@ -95,7 +96,7 @@ std::vector<int> BinaryFileInput(std::string filename) {
 	buildBinaryString(c2, fileSize, zeros, str);
 	myfile2.close();
 	if (str.size() % bits != 0) {
-		str = std::string(str.data(), (str.size() / bits) * bits);
+		str = string(str.data(), (str.size() / bits) * bits);
 	}
 	for (int i = 0; i < str.length(); i += bits) {
 		result.push_back(binaryString2Int(str.substr(i, bits)));
@@ -108,18 +109,18 @@ std::vector<int> BinaryFileInput(std::string filename) {
 // The result will be written to the output iterator
 // starting at "result"; the final iterator is returned.
 template <typename Iterator>
-Iterator compress(const std::string &uncompressed, Iterator result) {
+Iterator compress(const string &uncompressed, Iterator result) {
 	// Build the dictionary.
 	int dictSize = 256;
-	std::map<std::string, int> dictionary;
+	std::map<string, int> dictionary;
 	for (int i = 0; i < 256; i++)
-		dictionary[std::string(1, i)] = i;
+		dictionary[string(1, i)] = i;
 
-	std::string w;
-	for (std::string::const_iterator it = uncompressed.begin();
+	string w;
+	for (string::const_iterator it = uncompressed.begin();
 		it != uncompressed.end(); ++it) {
 		char c = *it;
-		std::string wc = w + c;
+		string wc = w + c;
 		if (dictionary.count(wc))
 			w = wc;
 		else {
@@ -127,7 +128,7 @@ Iterator compress(const std::string &uncompressed, Iterator result) {
 			// Add wc to the dictionary. Assuming the size is 4096!!!
 			if (dictionary.size()<4096)
 				dictionary[wc] = dictSize++;
-			w = std::string(1, c);
+			w = string(1, c);
 		}
 	}
 
@@ -140,17 +141,17 @@ Iterator compress(const std::string &uncompressed, Iterator result) {
 // Decompress a list of output ks to a string.
 // "begin" and "end" must form a valid range of ints
 template <typename Iterator>
-std::string decompress(Iterator begin, Iterator end) {
+string decompress(Iterator begin, Iterator end) {
 	// Build the dictionary.
 	int dictSize = 256;
-	std::map<int, std::string> dictionary;
+	std::map<int, string> dictionary;
 	for (int i = 0; i < 256; i++)
-		dictionary[i] = std::string(1, i);
+		dictionary[i] = string(1, i);
 
-	std::string w(1, *begin++);
-	std::string result = w;
+	string w(1, *begin++);
+	string result = w;
 	std::cout << result << "???:::\n";
-	std::string entry;
+	string entry;
 	for (; begin != end; begin++) {
 		int k = *begin;
 		if (dictionary.count(k))
@@ -171,8 +172,8 @@ std::string decompress(Iterator begin, Iterator end) {
 	return result;
 }
 
-std::string int2BinaryString(int c, int cl) {
-	std::string p = ""; //a binary code string with code length = cl
+string int2BinaryString(int c, int cl) {
+	string p = ""; //a binary code string with code length = cl
 	int code = c;
 	while (c>0) {
 		if (c % 2 == 0)
@@ -193,7 +194,7 @@ std::string int2BinaryString(int c, int cl) {
 	return p;
 }
 
-int binaryString2Int(std::string p) {
+int binaryString2Int(string p) {
 	int code = 0;
 	if (p.size()>0) {
 		if (p.at(0) == '1')
@@ -209,7 +210,7 @@ int binaryString2Int(std::string p) {
 	return code;
 }
 
-std::string readFileIO(std::string filename) {
+string readFileIO(string filename) {
 	std::ifstream infile(filename.c_str(), std::ios::binary);
 	std::streampos begin;
 	std::streampos end;
@@ -224,15 +225,15 @@ std::string readFileIO(std::string filename) {
 	mem_Block[size] = '\0';
 	infile.close();
 
-	return std::string(mem_Block, size);
+	return string(mem_Block, size);
 }
 
 int main(int argc, char* argv[]) {
 	
 	std::ifstream infile;
-	std::string filename(argv[2]);
+	string filename(argv[2]);
 	std::vector<int>compressDoc;
-	std::string doc;
+	string doc;
 
 	//compress the file
 	if (*argv[1] == 'c') {
@@ -250,7 +251,7 @@ int main(int argc, char* argv[]) {
 		filename = filename.substr(0, filename.find_last_of("."));
 		auto extension = filename.find_first_of(".");
 
-		if (extension != std::string::npos) {
+		if (extension != string::npos) {
 			filename.insert(filename.find_first_of("."), "2");
 		}
 		else {

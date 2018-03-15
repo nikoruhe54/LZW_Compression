@@ -1,9 +1,9 @@
 /*
-This code is derived for UA CS435 from LZW@RosettaCode
-Cody Skala
-Algorithms Assignment 2 Part 2: LZW Compression
-Created: 03/23/2016 14:22
-This program will compress and decompress files in the LZW format with varying bit sizes.
+Nikolai Ruhe
+Algorithms Project 2: LZW Compression, Part I
+March 16, 2018
+Dr. Duan
+Source code is derived and modified from LZW@RosettaCode for UA CS435
 */
 #include <string>
 #include <map>
@@ -13,15 +13,14 @@ This program will compress and decompress files in the LZW format with varying b
 #include <vector>
 #include <math.h>
 #include <sys/stat.h>
-
 using namespace std;
 
 //This function was provided and converts an int to a binary string with
 //a certain amount of bits for the size of the string
-string int2BinaryString(int c, int cl) {
-	//a binary code string with code length = cl
-	string p = "";
-	while (c > 0) {
+std::string int2BinaryString(int c, int cl) {
+	std::string p = ""; //a binary code string with code length = cl
+	int code = c;
+	while (c>0) {
 		if (c % 2 == 0)
 			p = "0" + p;
 		else
@@ -29,13 +28,12 @@ string int2BinaryString(int c, int cl) {
 		c = c >> 1;
 	}
 	int zeros = cl - p.size();
-	if (zeros < 0) {
-		cout << "Warning: Overflow. code is too big to be coded by " << cl << " bits!\n";
+	if (zeros<0) {
+		std::cout << "\nWarning: Overflow. code " << code << " is too big to be coded by " << cl << " bits!\n";
 		p = p.substr(p.size() - cl);
 	}
 	else {
-		//pad 0s to left of the binary code if needed
-		for (int i = 0; i<zeros; i++)
+		for (int i = 0; i<zeros; i++)  //pad 0s to left of the binary code if needed
 			p = "0" + p;
 	}
 	return p;
