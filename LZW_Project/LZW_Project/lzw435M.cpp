@@ -80,10 +80,11 @@ void compress(const string &uncompressed, string fileName) {
 	string binaryCode = "";
 	int tableSize = 256, bits;
 	map<string, int> dictionary;
+	string w;
 	for (int i = 0; i < 256; i++)
 		dictionary[string(1, i)] = i;
 
-	string w;
+	cout << "Writing File.... may take a few seconds for large files \n";
 	for (string::const_iterator it = uncompressed.begin(); 
 		it != uncompressed.end(); ++it) {
 		char c = *it;
@@ -101,7 +102,7 @@ void compress(const string &uncompressed, string fileName) {
 	}
 
 	getBinaryCode(binaryCode, dictionary, tableSize, w);
-	//make the compressed file saved with extension .lzw2
+	//make the compressed file saved with extension .lzwM
 	fileName += ".lzwM";
 	ofstream myfile;
 	myfile.open(fileName.c_str(), ios::binary);
@@ -160,7 +161,7 @@ string decompress(Iterator begin, Iterator end) {
 int main(int argc, char* argv[]) {
 	//check the arguments are valid for the program
 	if (argc != 3 || (string(argv[1]) != "e" && string(argv[1]) != "c")) {
-		cout << "Error, invalid entry! Usage:\n\t./lzw435 c filename\n\t./lzw435 e filename.lzw2" << endl;
+		cout << "Error, not valid argument parameters" << endl;
 		return 0;
 	}
 
@@ -183,8 +184,8 @@ int main(int argc, char* argv[]) {
 		ifstream inputFile;
 		ofstream outputFile;
 		string str = string(argv[2]);
-		if (str.substr(str.size() - 5, str.size()) != ".lzw2") {
-			cout << "Error, file not .lzw2 extension!" << endl;
+		if (str.substr(str.size() - 5, str.size()) != ".lzwM") {
+			cout << "Error, file not .lzwM extension!" << endl;
 			return 0;
 		}
 		str = str.substr(0, str.size() - 5) + "2M";
