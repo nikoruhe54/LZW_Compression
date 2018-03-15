@@ -232,8 +232,8 @@ int main(int argc, char* argv[]) {
 
 	//compress the file
 	if (*argv[1] == 'c') {
-		std::vector<int> compressDoc;
 		std::string doc = readFileIO(filename);
+		std::vector<int> compressDoc;
 		compress(doc, std::back_inserter(compressDoc));
 		filename += ".lzw";
 		write(compressDoc, filename);
