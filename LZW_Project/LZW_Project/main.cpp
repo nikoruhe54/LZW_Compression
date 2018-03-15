@@ -1,3 +1,11 @@
+/*
+Nikolai Ruhe
+Algorithms Project 2: LZW Compression, Part I
+March 16, 2018
+Dr. Duan
+Source code is derived and modified from LZW@RosettaCode for UA CS435
+*/
+
 #include <string>
 #include <map>
 #include <iostream>
@@ -5,10 +13,6 @@
 #include <iterator>
 #include <vector> 
 #include <sys/stat.h>
-
-/*
-This code is derived from LZW@RosettaCode for UA CS435
-*/
 
 std::string int2BinaryString(int c, int cl);
 int binaryString2Int(std::string p);
@@ -39,18 +43,16 @@ int CreateBinaryCode(std::string binaryCode, std::string filename) {
 }
 
 void write(std::vector<int> compressed, std::string filename) {
-	int c = 69, bits = 12, bytes = 1;
+	int c = 65, bits = 12, bytes = 1;
 
 	std::string tempStr = int2BinaryString(c, bits);
-	std::cout << "c=" << c << " : binary string=" << tempStr << "; back to code=" << binaryString2Int(tempStr) << "\n";
+	std::cout << "Writing File.... may take a few seconds for large files \n";
 
 	std::string binaryCode = "";
 	for (std::vector<int>::iterator it = compressed.begin(); it != compressed.end(); ++it) {
 		tempStr = int2BinaryString(*it, bits);
-		//std::cout << "c=" << *it << " : binary string=" << tempStr << "; back to code=" << binaryString2Int(tempStr) << "\n";
 		binaryCode += tempStr;
 	}
-
 	CreateBinaryCode(binaryCode, filename);
 }
 
