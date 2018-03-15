@@ -226,9 +226,9 @@ std::string readFileIO(std::string filename) {
 }
 
 int main(int argc, char* argv[]) {
-
-	std::string filename(argv[2]);
+	
 	std::ifstream infile;
+	std::string filename(argv[2]);
 
 	//compress the file
 	if (*argv[1] == 'c') {
