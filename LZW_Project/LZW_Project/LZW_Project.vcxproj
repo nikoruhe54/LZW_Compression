@@ -111,7 +111,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="lzw435.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\RSA_Algorithms_Project\bigInt435\Makefile" />
