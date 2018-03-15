@@ -118,7 +118,7 @@ Iterator compress(const std::string &uncompressed, Iterator result) {
 		it != uncompressed.end(); ++it) {
 		char c = *it;
 		std::string wc = w + c;
-		if (dictionary.iterator(wc))
+		if (dictionary.count(wc))
 			w = wc;
 		else {
 			*result++ = dictionary[w];
@@ -151,7 +151,7 @@ std::string decompress(Iterator begin, Iterator end) {
 	std::string entry;
 	for (; begin != end; begin++) {
 		int k = *begin;
-		if (dictionary.iterator(k))
+		if (dictionary.count(k))
 			entry = dictionary[k];
 		else if (k == dictSize)
 			entry = w + w[0];
