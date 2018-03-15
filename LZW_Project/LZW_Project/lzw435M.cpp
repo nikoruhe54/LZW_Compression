@@ -1,86 +1,27 @@
+/*
+This code is derived for UA CS435 from LZW@RosettaCode
+Cody Skala
+Algorithms Assignment 2 Part 2: LZW Compression
+Created: 03/23/2016 14:22
+This program will compress and decompress files in the LZW format with varying bit sizes.
+*/
 #include <string>
 #include <map>
 #include <iostream>
 #include <fstream>
 #include <iterator>
 #include <vector>
-#include <cmath>
+#include <math.h>
 #include <sys/stat.h>
 
-/*
-This code is derived for UA CS435 from LZW@RosettaCode
-*/
+using namespace std;
 
-// Compress a string to a list of output symbols.
-// The result will be written to the output iterator
-// starting at "result"; the final iterator is returned.
-template <typename Iterator>
-Iterator compress(const std::string &uncompressed, Iterator result) {
-	// Build the dictionary.
-	int dictSize = 256;
-	std::map<std::string, int> dictionary;
-	for (int i = 0; i < 256; i++)
-		dictionary[std::string(1, i)] = i;
-
-	std::string w;
-	for (std::string::const_iterator it = uncompressed.begin();
-		it != uncompressed.end(); ++it) {
-		char c = *it;
-		std::string wc = w + c;
-		if (dictionary.count(wc))
-			w = wc;
-		else {
-			*result++ = dictionary[w];
-			// Add wc to the dictionary.
-			if (dictSize < 65536)
-				dictionary[wc] = dictSize++;
-			w = std::string(1, c);
-		}
-	}
-
-	// Output the code for w.
-	if (!w.empty())
-		*result++ = dictionary[w];
-	return result;
-}
-
-// Decompress a list of output ks to a string.
-// "begin" and "end" must form a valid range of ints
-template <typename Iterator>
-std::string decompress(Iterator begin, Iterator end) {
-	// Build the dictionary.
-	int dictSize = 256;
-	std::map<int, std::string> dictionary;
-	for (int i = 0; i < 256; i++)
-		dictionary[i] = std::string(1, i);
-
-	std::string w(1, *begin++);
-	std::string result = w;
-	std::string entry;
-	for (; begin != end; begin++) {
-		int k = *begin;
-		if (dictionary.count(k))
-			entry = dictionary[k];
-		else if (k == dictSize)
-			entry = w + w[0];
-		else
-			std::cout << k << "\n";
-
-		result += entry;
-
-		// Add w+entry[0] to the dictionary.
-		if (dictSize < 65536)
-			dictionary[dictSize++] = w + entry[0];
-
-
-		w = entry;
-	}
-	return result;
-}
-
-std::string int2BinaryString(int c, int cl) {
-	std::string p = ""; //a binary code string with code length = cl
-	while (c>0) {
+//This function was provided and converts an int to a binary string with
+//a certain amount of bits for the size of the string
+string int2BinaryString(int c, int cl) {
+	//a binary code string with code length = cl
+	string p = "";
+	while (c > 0) {
 		if (c % 2 == 0)
 			p = "0" + p;
 		else
@@ -88,24 +29,26 @@ std::string int2BinaryString(int c, int cl) {
 		c = c >> 1;
 	}
 	int zeros = cl - p.size();
-	if (zeros<0) {
-		std::cout << "\nWarning: Overflow. code is too big to be coded by " << cl << " bits!\n";
+	if (zeros < 0) {
+		cout << "Warning: Overflow. code is too big to be coded by " << cl << " bits!\n";
 		p = p.substr(p.size() - cl);
 	}
 	else {
-		for (int i = 0; i<zeros; i++)  //pad 0s to left of the binary code if needed
+		//pad 0s to left of the binary code if needed
+		for (int i = 0; i<zeros; i++)
 			p = "0" + p;
 	}
 	return p;
 }
 
-int binaryString2Int(std::string p) {
+//This will take a binary string and convert it to an int
+int binaryString2Int(string p) {
 	int code = 0;
 	if (p.size()>0) {
 		if (p.at(0) == '1')
 			code = 1;
 		p = p.substr(1);
-		while (p.size()>0) {
+		while (p.size() > 0) {
 			code = code << 1;
 			if (p.at(0) == '1')
 				code++;
@@ -115,42 +58,48 @@ int binaryString2Int(std::string p) {
 	return code;
 }
 
-void binaryIODemo(std::vector<int> compressed, std::string daName) {
-	int bits;
-	std::string p;
+// This function was provided to compress the contents of the file using LZW
+void compress(const string &uncompressed, string fileName) {
+	//create the binary string to save the compressed file to
+	string bcode = "";
+	int dictSize = 256;
+	map<string, int> dictionary;
+	for (int i = 0; i < 256; i++)
+		dictionary[string(1, i)] = i;
 
-	std::string bcode = "";
-	for (std::vector<int>::iterator it = compressed.begin(); it != compressed.end(); ++it) {
-		int where = it - compressed.begin();
-		if (where<256)
-			bits = 9;
-		else if (256 <= where && where<768)
-			bits = 10;
-		else if (768 <= where && where<1792)
-			bits = 11;
-		else if (1792 <= where && where<3840)
-			bits = 12;
-		else if (3840 <= where && where<7936)
-			bits = 13;
-		else if (7936 <= where && where<16128)
-			bits = 14;
-		else if (16128 <= where && where<32512)
-			bits = 15;
-		else
-			bits = 16;
-		p = int2BinaryString(*it, bits);
-		bcode += p;
+	string w;
+	for (string::const_iterator it = uncompressed.begin(); it != uncompressed.end(); ++it) {
+		char c = *it;
+		string wc = w + c;
+		if (dictionary.count(wc))
+			w = wc;
+		else {
+			//save the numbers to the correct bit length, between 9 and 16
+			int bits = ceil(log2(dictSize + 1));
+			if (bits > 16)
+				bits = 16;
+			bcode += int2BinaryString(dictionary[w], bits);
+			// Add wc to the dictionary if there is still room in the table of 16 bits
+			if (dictSize < 65536)
+				dictionary[wc] = dictSize++;
+			w = string(1, c);
+		}
 	}
+	// Output the code for w.
+	if (!w.empty()) {
+		bcode += int2BinaryString(dictionary[w], min((int)ceil(log2(dictSize + 1)), 16));
+	}
+	//make the compressed file saved with extension .lzw2
+	fileName += ".lzw2";
+	ofstream myfile;
+	myfile.open(fileName.c_str(), ios::binary);
 
-	//writing to file
-	std::string fileName = daName + ".lzw";
-	std::ofstream myfile;
-	myfile.open(fileName.c_str(), std::ios::binary);
-
-	std::string zeros = "00000000";
-	if (bcode.size() % 8 != 0) //make sure the length of the binary string is a multiple of 8
+	string zeros = "00000000";
+	//make sure the length of the binary string is a multiple of 8
+	if (bcode.size() % 8 != 0)
 		bcode += zeros.substr(0, 8 - bcode.size() % 8);
 
+	//convert the binary string to characters for simple compression
 	int b;
 	for (int i = 0; i < bcode.size(); i += 8) {
 		b = 1;
@@ -159,227 +108,109 @@ void binaryIODemo(std::vector<int> compressed, std::string daName) {
 			if (bcode.at(i + j) == '1')
 				b += 1;
 		}
-		char c = (char)(b & 255); //save the string byte by byte
+		//save the string byte by byte
+		char c = (char)(b & 255);
 		myfile.write(&c, 1);
 	}
 	myfile.close();
-
 }
 
+// This function was provided to decompress a compressed file back to original using LZW
+template <typename Iterator>
+string decompress(Iterator begin, Iterator end) {
+	int dictSize = 256;
+	//Reverse the disctionary created by reversing the map
+	map<int, string> dictionary;
+	for (int i = 0; i < 256; i++)
+		dictionary[i] = string(1, i);
 
-std::string ReadFile(std::string fileName) {
-	//reading from a file
-	std::string zeros = "00000000";
-	std::ifstream myfile2;
-	myfile2.open(fileName.c_str(), std::ios::binary);
+	string w(1, *begin++);
+	string result = w;
+	string entry;
+	for (; begin != end; begin++) {
+		int k = *begin;
+		if (dictionary.count(k))
+			entry = dictionary[k];
+		else if (k == dictSize)
+			entry = w + w[0];
+		else throw "Bad compressed k";
 
-	struct stat filestatus;
-	stat(fileName.c_str(), &filestatus);
-	long fsize = filestatus.st_size; //get the size of the file in bytes
+		result += entry;
 
-	char c2[fsize];
-	myfile2.read(c2, fsize);
+		// Add w+entry[0] to the dictionary.
+		dictionary[dictSize++] = w + entry[0];
 
-	std::string s = "";
-	long count = 0;
-	while (count<fsize) {
-		unsigned char uc = (unsigned char)c2[count];
-		std::string p = ""; //a binary string
-		for (int j = 0; j<8 && uc>0; j++) {
-			if (uc % 2 == 0)
-				p = "0" + p;
-			else
-				p = "1" + p;
-			uc = uc >> 1;
-		}
-		p = zeros.substr(0, 8 - p.size()) + p; //pad 0s to left if needed
-		s += p;
-		count++;
+		w = entry;
 	}
-	myfile2.close();
-
-	return s;
+	return result;
 }
-
-
 
 int main(int argc, char* argv[]) {
-
-	// if 0 arguments
-	if (argc != 3)
-	{
-		std::cout << "Invalid arguments.You should run this program in terminal with 2 arguments." << std::endl;
-		exit(1);
+	//check the arguments are valid for the program
+	if (argc != 3 || (string(argv[1]) != "e" && string(argv[1]) != "c")) {
+		cout << "Error, invalid entry! Usage:\n\t./lzw435 c filename\n\t./lzw435 e filename.lzw2" << endl;
+		return 0;
 	}
 
-	// if incorrect arguments
-	else if (*argv[1] != 'c' && *argv[1] != 'e') {
-		std::cout << "Run Program with c or e followed by filename as specified in directions on class site." << std::endl;
-		exit(1);
+	//do this for compression
+	if (string(argv[1]) == "c") {
+		ifstream inputFile;
+		inputFile.open(argv[2]);
+		string temp = "";
+		char keyChar;
+		//get the original file one character at a time and put it in a string
+		while (inputFile.get(keyChar))
+			temp += keyChar;
+		inputFile.close();
+		//compress the file which is saved in the string temp and save it to a file
+		compress(temp, argv[2]);
 	}
+
 
 	else {
-		//Compress
-		if (*argv[1] == 'c') {
-			// open file to compress
-			std::ifstream inputFile;
-			inputFile.open(argv[2]);
-
-			//convert file bytes to string
-
-			std::string fBytes((std::istreambuf_iterator<char>(inputFile)), std::istreambuf_iterator<char>());
-
-
-			std::vector<int> compressed;
-			compress(fBytes, std::back_inserter(compressed));
-
-			binaryIODemo(compressed, argv[2]);
-
+		ifstream inputFile;
+		ofstream outputFile;
+		string str = string(argv[2]);
+		if (str.substr(str.size() - 5, str.size()) != ".lzw2") {
+			cout << "Error, file not .lzw2 extension!" << endl;
+			return 0;
 		}
-
-		else {
-
-			std::string fThings = ReadFile(argv[2]);
-			std::string temp;
-
-			std::vector<int> compressed;
-
-			int here = 0;
-
-
-			for (int i = 0; i<256; i++) {
-				for (int j = 0; j<9; j++) {
-					if (fThings.size() <= here)
-						break;
-					temp += fThings.at(here);
-					here++;
-				}
-				if (fThings.size() <= here)
-					break;
-				int nums = binaryString2Int(temp);
-				compressed.push_back(nums);
-				temp = "";
-			}
-
-			for (int i = 0; i<512; i++) {
-				for (int j = 0; j<10; j++) {
-					if (fThings.size() <= here)
-						break;
-					temp += fThings.at(here);
-					here++;
-				}
-				if (fThings.size() <= here)
-					break;
-				int nums = binaryString2Int(temp);
-				compressed.push_back(nums);
-				temp = "";
-			}
-
-
-			for (int i = 0; i<1024; i++) {
-				for (int j = 0; j<11; j++) {
-					if (fThings.size() <= here)
-						break;
-					temp += fThings.at(here);
-					here++;
-				}
-				if (fThings.size() <= here)
-					break;
-				int nums = binaryString2Int(temp);
-				compressed.push_back(nums);
-				temp = "";
-			}
-
-
-			for (int i = 0; i<2048; i++) {
-				for (int j = 0; j<12; j++) {
-					if (fThings.size() <= here)
-						break;
-					temp += fThings.at(here);
-					here++;
-				}
-				if (fThings.size() <= here)
-					break;
-				int nums = binaryString2Int(temp);
-				compressed.push_back(nums);
-				temp = "";
-			}
-
-
-			for (int i = 0; i<4096; i++) {
-				for (int j = 0; j<13; j++) {
-					if (fThings.size() <= here)
-						break;
-					temp += fThings.at(here);
-					here++;
-				}
-				if (fThings.size() <= here)
-					break;
-				int nums = binaryString2Int(temp);
-				compressed.push_back(nums);
-				temp = "";
-			}
-
-
-			for (int i = 0; i<8192; i++) {
-				for (int j = 0; j<14; j++) {
-					if (fThings.size() <= here)
-						break;
-					temp += fThings.at(here);
-					here++;
-				}
-				if (fThings.size() <= here)
-					break;
-				int nums = binaryString2Int(temp);
-				compressed.push_back(nums);
-				temp = "";
-			}
-
-
-			for (int i = 0; i<16384; i++) {
-				for (int j = 0; j<15; j++) {
-					if (fThings.size() <= here)
-						break;
-					temp += fThings.at(here);
-					here++;
-				}
-				if (fThings.size() <= here)
-					break;
-				int nums = binaryString2Int(temp);
-				compressed.push_back(nums);
-				temp = "";
-			}
-
-			int last = here - compressed.size();
-
-			for (int i = 0; i<last; i++) {
-				for (int j = 0; j<16; j++) {
-					if (fThings.size() <= here)
-						break;
-					temp += fThings.at(here);
-					here++;
-				}
-				if (fThings.size() <= here)
-					break;
-				int nums = binaryString2Int(temp);
-				compressed.push_back(nums);
-				temp = "";
-			}
-
-			std::string decompressed = decompress(compressed.begin(), compressed.end());
-
-
-			std::string outName = argv[2];
-			for (int i = 0; i<4; i++)
-				outName.erase(outName.end() - 1);
-
-			std::ofstream outputFile;
-			outputFile.open("Expanded " + outName);
-			outputFile << decompressed;
-			outputFile.close();
-
+		str = str.substr(0, str.size() - 5) + "2M";
+		inputFile.open(argv[2], ios::binary);
+		outputFile.open(str.c_str());
+		vector<int> compressed;
+		string binNumber = "";
+		char keyChar;
+		//get the original file one character at a time and put it in a string
+		while (inputFile.get(keyChar)) {
+			for (int i = 7; i >= 0; --i)
+				binNumber += ((keyChar >> i) & 1) ? "1" : "0";
 		}
+		int bitMath = 1;
+		int test = 0;
+		//read certain number of bits at a time, find the interger equivalent,
+		//and push it to the vector
+		for (int i = 0; i < binNumber.size(); i = i + min((int)ceil(log2(bitMath + 255)), 16)) {
+			int bits = ceil(log2(bitMath + 256));
+			if (bits > 16) bits = 16;
+			bitMath++;
+			string current = "";
+			for (int j = i; j < i + bits; ++j) {
+				test++;
+				if (test > binNumber.size())
+					break;
+				current += binNumber[j];
+			}
+			if (test > binNumber.size())
+				break;
+			compressed.push_back(binaryString2Int(current));
+		}
+		//decompress the vector and get the original contents back
+		string decompressed = decompress(compressed.begin(), compressed.end());
+		//save the original contents to filename2M
+		outputFile << decompressed;
+		inputFile.close();
+		outputFile.close();
 	}
-
 	return 0;
 }
