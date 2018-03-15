@@ -78,7 +78,7 @@ void populateDictionary(map<string, int> &dictionary, int &dictionarySize, strin
 void compress(const string &uncompressed, string fileName) {
 	// Build the dictionary
 	string binaryCode = "";
-	int tableSize = 256, bits;
+	int tableSize = 256, bytes = 1, bits;
 	map<string, int> dictionary;
 	string w;
 	for (int i = 0; i < 256; i++)
@@ -102,27 +102,27 @@ void compress(const string &uncompressed, string fileName) {
 	}
 
 	getBinaryCode(binaryCode, dictionary, tableSize, w);
-	//make the compressed file saved with extension .lzwM
+
+	//give compressed file lzwM extension
 	fileName += ".lzwM";
+
 	ofstream myfile;
 	myfile.open(fileName.c_str(), ios::binary);
-
 	string zeros = "00000000";
-	//make sure the length of the binary string is a multiple of 8
+	//make the length of the binary divisible by 8
 	if (binaryCode.size() % 8 != 0)
 		binaryCode += zeros.substr(0, 8 - binaryCode.size() % 8);
 
-	//convert the binary string to characters for simple compression
-	int b;
+	//make the binary stream form characters
+	//this will help with compression
 	for (int i = 0; i < binaryCode.size(); i += 8) {
-		b = 1;
 		for (int j = 0; j < 8; j++) {
-			b = b << 1;
+			bytes = bytes << 1;
 			if (binaryCode.at(i + j) == '1')
-				b += 1;
+				bytes += 1;
 		}
-		//save the string byte by byte
-		char c = (char)(b & 255);
+		//the string should be saved in each byte
+		char c = (char)(bytes & 255);
 		myfile.write(&c, 1);
 	}
 	myfile.close();
