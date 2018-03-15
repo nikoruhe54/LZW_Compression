@@ -47,7 +47,7 @@ void write(std::vector<int> compressed, std::string filename) {
 	std::string binaryCode = "";
 	for (std::vector<int>::iterator it = compressed.begin(); it != compressed.end(); ++it) {
 		tempStr = int2BinaryString(*it, bits);
-		std::cout << "c=" << *it << " : binary string=" << tempStr << "; back to code=" << binaryString2Int(tempStr) << "\n";
+		//std::cout << "c=" << *it << " : binary string=" << tempStr << "; back to code=" << binaryString2Int(tempStr) << "\n";
 		binaryCode += tempStr;
 	}
 
@@ -229,11 +229,12 @@ int main(int argc, char* argv[]) {
 	
 	std::ifstream infile;
 	std::string filename(argv[2]);
+	std::vector<int>compressDoc;
+	std::string doc;
 
 	//compress the file
 	if (*argv[1] == 'c') {
-		std::string doc = readFileIO(filename);
-		std::vector<int> compressDoc;
+		doc = readFileIO(filename);
 		compress(doc, std::back_inserter(compressDoc));
 		filename += ".lzw";
 		write(compressDoc, filename);
@@ -241,8 +242,8 @@ int main(int argc, char* argv[]) {
 
 	//decompress the file
 	if (*argv[1] == 'e') {
-		std::vector<int> compressDoc = BinaryFileInput(filename);
-		std::string document = decompress(compressDoc.begin(), compressDoc.end());
+		compressDoc = BinaryFileInput(filename);
+		doc = decompress(compressDoc.begin(), compressDoc.end());
 
 		filename = filename.substr(0, filename.find_last_of("."));
 		auto extension = filename.find_first_of(".");
@@ -255,6 +256,6 @@ int main(int argc, char* argv[]) {
 		}
 
 		std::ofstream outFile(filename, std::ios::binary);
-		outFile.write(document.data(), document.size());
+		outFile.write(doc.data(), doc.size());
 	}
 }
