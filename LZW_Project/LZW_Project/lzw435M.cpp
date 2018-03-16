@@ -181,6 +181,9 @@ string readFileIO(string filename) {
 
 int main(int argc, char* argv[]) {
 
+	std::vector<int>compressDoc;
+	string filename(argv[2]);
+
 	//check the arguments are valid for the program
 	if (argc != 3 || (*argv[1] != 'e' && *argv[1] != 'c')) {
 		cout << "Error, not valid argument parameters" << endl;
@@ -190,8 +193,6 @@ int main(int argc, char* argv[]) {
 	//compress the file
 	if (*argv[1] == 'c') {
 		ifstream infile;
-		string filename(argv[2]);
-		std::vector<int>compressDoc;
 		string doc;
 		doc = readFileIO(filename);
 		compress(doc, argv[2]);
@@ -200,24 +201,31 @@ int main(int argc, char* argv[]) {
 
 	//decompress the file
 	if (*argv[1] == 'e') {
-		ifstream inputFile;
+		ifstream expandInputFile;
 		ofstream outputFile;
-		string str = string(argv[2]);
-
-		//return an error if the wrong type of file is tried to be expanded
-		/*if (str.substr(str.size() - 5, str.size()) != ".lzwM") {
-			cout << "Error, file not .lzwM extension!" << endl;
-			return 0;
-		}
-		*/
-		str = str.substr(0, str.size() - 5) + "2M";
-		inputFile.open(argv[2], ios::binary);
-		outputFile.open(str.c_str());
-		vector<int> compressed;
 		string binNumber = "";
 		char keyChar;
+
+		//return an error if the wrong type of file is tried to be expanded
+		if (filename.substr(filename.size() - 5, filename.size()) != ".lzwM") {
+			cout << "Error, the file needs to have .lzwM extension!" << endl;
+			return 0;
+		}
+		
+		auto extension = filename.find_first_of(".");
+
+		if (extension != string::npos) {
+			filename.insert(filename.find_first_of("."), "2M");
+		}
+		else {
+			filename += 2;
+		}
+
+		expandInputFile.open(argv[2], ios::binary);
+		outputFile.open(filename.c_str());
+
 		//get the original file one character at a time and put it in a string
-		while (inputFile.get(keyChar)) {
+		while (expandInputFile.get(keyChar)) {
 			for (int i = 7; i >= 0; --i)
 				binNumber += ((keyChar >> i) & 1) ? "1" : "0";
 		}
@@ -238,13 +246,13 @@ int main(int argc, char* argv[]) {
 			}
 			if (test > binNumber.size())
 				break;
-			compressed.push_back(binaryString2Int(current));
+			compressDoc.push_back(binaryString2Int(current));
 		}
 		//decompress the vector and get the original contents back
-		string decompressed = decompress(compressed.begin(), compressed.end());
+		string decompressed = decompress(compressDoc.begin(), compressDoc.end());
 		//save the original contents to filename2M
 		outputFile << decompressed;
-		inputFile.close();
+		expandInputFile.close();
 		outputFile.close();
 	}
 	return 0;

@@ -251,6 +251,12 @@ int main(int argc, char* argv[]) {
 
 	//decompress the file
 	if (*argv[1] == 'e') {
+		//return an error if the wrong type of file is tried to be expanded
+		if (filename.substr(filename.size() - 4, filename.size()) != ".lzw") {
+			cout << "Error, the file needs to have .lzw extension!" << endl;
+			return 0;
+		}
+
 		compressDoc = BinaryFileInput(filename);
 		doc = decompress(compressDoc.begin(), compressDoc.end());
 
