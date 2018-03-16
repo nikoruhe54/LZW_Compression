@@ -179,10 +179,31 @@ string readFileIO(string filename) {
 	return string(mem_Block, size);
 }
 
+void updateCurrentBinary(string &currentBinary, int &bits, int &checker, 
+	int &bitNums, string binNumber, vector<int> &compressDoc) {
+	for (int i = 0; i < binNumber.size(); i = i + min((int)ceil(log2(bitNums + 255)), 16)) {
+		bits = ceil(log2(bitNums + 256));
+		if (bits > 16)
+			bits = 16;
+		bitNums++;
+		currentBinary = "";
+		for (int j = i; j < i + bits; ++j) {
+			checker++;
+			if (checker > binNumber.size())
+				break;
+			currentBinary += binNumber[j];
+		}
+		if (checker > binNumber.size())
+			break;
+		compressDoc.push_back(binaryString2Int(currentBinary));
+	}
+}
+
 int main(int argc, char* argv[]) {
 
 	std::vector<int>compressDoc;
-	string filename(argv[2]);
+	string filename(argv[2]), currentBinary;
+	int bitNums = 1, checker = 0, bits;
 
 	//check the arguments are valid for the program
 	if (argc != 3 || (*argv[1] != 'e' && *argv[1] != 'c')) {
@@ -224,34 +245,20 @@ int main(int argc, char* argv[]) {
 		expandInputFile.open(argv[2], ios::binary);
 		outputFile.open(filename.c_str());
 
-		//get the original file one character at a time and put it in a string
+		//develop the original file one binary char at a time
 		while (expandInputFile.get(keyChar)) {
 			for (int i = 7; i >= 0; --i)
 				binNumber += ((keyChar >> i) & 1) ? "1" : "0";
 		}
-		int bitMath = 1;
-		int test = 0;
-		//read certain number of bits at a time, find the interger equivalent,
-		//and push it to the vector
-		for (int i = 0; i < binNumber.size(); i = i + min((int)ceil(log2(bitMath + 255)), 16)) {
-			int bits = ceil(log2(bitMath + 256));
-			if (bits > 16) bits = 16;
-			bitMath++;
-			string current = "";
-			for (int j = i; j < i + bits; ++j) {
-				test++;
-				if (test > binNumber.size())
-					break;
-				current += binNumber[j];
-			}
-			if (test > binNumber.size())
-				break;
-			compressDoc.push_back(binaryString2Int(current));
-		}
-		//decompress the vector and get the original contents back
-		string decompressed = decompress(compressDoc.begin(), compressDoc.end());
-		//save the original contents to filename2M
-		outputFile << decompressed;
+
+		//update the compressdoc with the binary nums of the integers they represent
+		updateCurrentBinary(currentBinary, bits, checker, bitNums, binNumber, compressDoc);
+		
+		//retrive the original message
+		string decompressedFile = decompress(compressDoc.begin(), compressDoc.end());
+
+		//output the file contents
+		outputFile << decompressedFile;
 		expandInputFile.close();
 		outputFile.close();
 	}
