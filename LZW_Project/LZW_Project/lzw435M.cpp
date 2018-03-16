@@ -181,10 +181,6 @@ string readFileIO(string filename) {
 
 int main(int argc, char* argv[]) {
 
-	std::ifstream infile;
-	string filename(argv[2]);
-	std::vector<int>compressDoc;
-	string doc;
 	//check the arguments are valid for the program
 	if (argc != 3 || (*argv[1] != 'e' && *argv[1] != 'c')) {
 		cout << "Error, not valid argument parameters" << endl;
@@ -193,18 +189,10 @@ int main(int argc, char* argv[]) {
 
 	//compress the file
 	if (*argv[1] == 'c') {
-		/*
-		ifstream inFile;
-		inFile.open(argv[2]);
-		string temp = "";
-		char keyChar;
-		//get the original file one character at a time and put it in a string
-		while (inFile.get(keyChar))
-			temp += keyChar;
-		inFile.close();
-		//compress the file which is saved in the string temp and save it to a file
-		compress(temp, argv[2]);
-		*/
+		ifstream infile;
+		string filename(argv[2]);
+		std::vector<int>compressDoc;
+		string doc;
 		doc = readFileIO(filename);
 		compress(doc, argv[2]);
 		infile.close();
@@ -215,10 +203,13 @@ int main(int argc, char* argv[]) {
 		ifstream inputFile;
 		ofstream outputFile;
 		string str = string(argv[2]);
-		if (str.substr(str.size() - 5, str.size()) != ".lzwM") {
+
+		//return an error if the wrong type of file is tried to be expanded
+		/*if (str.substr(str.size() - 5, str.size()) != ".lzwM") {
 			cout << "Error, file not .lzwM extension!" << endl;
 			return 0;
 		}
+		*/
 		str = str.substr(0, str.size() - 5) + "2M";
 		inputFile.open(argv[2], ios::binary);
 		outputFile.open(str.c_str());

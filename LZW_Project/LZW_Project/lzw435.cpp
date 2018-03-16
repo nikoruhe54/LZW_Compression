@@ -246,6 +246,7 @@ int main(int argc, char* argv[]) {
 		compress(doc, std::back_inserter(compressDoc));
 		filename += ".lzw";
 		write(compressDoc, filename);
+		infile.close();
 	}
 
 	//decompress the file
