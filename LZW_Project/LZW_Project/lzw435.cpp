@@ -234,6 +234,11 @@ int main(int argc, char* argv[]) {
 	string filename(argv[2]);
 	std::vector<int>compressDoc;
 	string doc;
+	//check to see that the arguments are valid for the program
+	if (argc != 3 || (string(argv[1]) != "e" && string(argv[1]) != "c")) {
+		cout << "Error, not valid argument parameters" << endl;
+		return 0;
+	}
 
 	//compress the file
 	if (*argv[1] == 'c') {

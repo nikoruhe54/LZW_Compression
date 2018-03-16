@@ -128,17 +128,19 @@ void compress(const string &uncompressed, string fileName) {
 	myfile.close();
 }
 
-// This function was provided to decompress a compressed file back to original using LZW
+// Decompress a list of output ks to a string.
+// "begin" and "end" must form a valid range of ints
 template <typename Iterator>
 string decompress(Iterator begin, Iterator end) {
+	//build the dictionary
 	int tableSize = 256;
-	//Reverse the disctionary created by reversing the map
 	map<int, string> dictionary;
 	for (int i = 0; i < 256; i++)
 		dictionary[i] = string(1, i);
 
 	string w(1, *begin++);
 	string result = w;
+	cout << result << "???:::\n";
 	string entry;
 	for (; begin != end; begin++) {
 		int k = *begin;
@@ -146,7 +148,8 @@ string decompress(Iterator begin, Iterator end) {
 			entry = dictionary[k];
 		else if (k == tableSize)
 			entry = w + w[0];
-		else throw "Bad compressed k";
+		else 
+			throw "Bad compressed k";
 
 		result += entry;
 
@@ -158,29 +161,57 @@ string decompress(Iterator begin, Iterator end) {
 	return result;
 }
 
+string readFileIO(string filename) {
+	std::ifstream infile(filename.c_str(), std::ios::binary);
+	std::streampos begin;
+	std::streampos end;
+	begin = infile.tellg();
+	infile.seekg(0, std::ios::end);
+	end = infile.tellg();
+	infile.seekg(0, std::ios::beg);
+	std::streampos size = end - begin;
+
+	char* mem_Block = new char[size];
+	infile.read(mem_Block, size);
+	mem_Block[size] = '\0';
+	infile.close();
+
+	return string(mem_Block, size);
+}
+
 int main(int argc, char* argv[]) {
+
+	std::ifstream infile;
+	string filename(argv[2]);
+	std::vector<int>compressDoc;
+	string doc;
 	//check the arguments are valid for the program
-	if (argc != 3 || (string(argv[1]) != "e" && string(argv[1]) != "c")) {
+	if (argc != 3 || (*argv[1] != 'e' && *argv[1] != 'c')) {
 		cout << "Error, not valid argument parameters" << endl;
 		return 0;
 	}
 
-	//do this for compression
-	if (string(argv[1]) == "c") {
-		ifstream inputFile;
-		inputFile.open(argv[2]);
+	//compress the file
+	if (*argv[1] == 'c') {
+		/*
+		ifstream inFile;
+		inFile.open(argv[2]);
 		string temp = "";
 		char keyChar;
 		//get the original file one character at a time and put it in a string
-		while (inputFile.get(keyChar))
+		while (inFile.get(keyChar))
 			temp += keyChar;
-		inputFile.close();
+		inFile.close();
 		//compress the file which is saved in the string temp and save it to a file
 		compress(temp, argv[2]);
+		*/
+		doc = readFileIO(filename);
+		compress(doc, argv[2]);
+		infile.close();
 	}
 
-
-	else {
+	//decompress the file
+	if (*argv[1] == 'e') {
 		ifstream inputFile;
 		ofstream outputFile;
 		string str = string(argv[2]);
